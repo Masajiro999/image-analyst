@@ -78,6 +78,17 @@ async function analyzeWithGemini(imageBuffer) {
     const prompt = `
 あなたはAgentic Visionモードでデスクトップのスクリーンショットを分析します。
 
+[重要: 画像ファイルの確認]
+まず最初に以下のコードを実行して、利用可能なファイルを確認してください：
+\`\`\`python
+import os
+print("Current directory files:", os.listdir('.'))
+img_files = [f for f in os.listdir('.') if f.endswith(('.png', '.jpg', '.jpeg'))]
+print("Found image files:", img_files)
+IMG_PATH = img_files[0] if img_files else None
+print("Using image:", IMG_PATH)
+\`\`\`
+
 [タスク]
 現在のデスクトップの状態を分析し、以下の情報を抽出してください:
 
@@ -87,10 +98,17 @@ THINK:
 3. デスクトップの全体的な状態
 
 ACT:
-必要に応じてPythonで画像処理を行い、詳細を確認してください。
+PILを使って安全に画像を読み込んでください（cv2.imreadは避ける）：
+\`\`\`python
+from PIL import Image
+img = Image.open(IMG_PATH)
+width, height = img.size
+print(f"Image size: {width}x{height}")
+\`\`\`
 
 OBSERVE:
 処理結果を確認し、要約を作成してください。
+座標のハードコードは避け、画像全体から視覚的に情報を読み取ってください。
 
 [出力形式]
 以下の情報を日本語で簡潔にまとめてください:
