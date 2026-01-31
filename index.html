@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Agentic Vision</title>
+  <meta name="description" content="Gemini 3 Flash Agentic Vision - 高精度画像分析ツール">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- ヘッダー -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <span class="logo-icon">👁️</span>
+          <h1>Agentic Vision</h1>
+          <span class="badge">Gemini 3 Flash</span>
+        </div>
+        <div class="header-actions">
+          <button id="settingsBtn" class="btn-icon" title="設定">⚙️</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+      <!-- 左パネル: 入力 -->
+      <section class="panel input-panel">
+        <div class="panel-header">
+          <h2>📤 画像入力</h2>
+        </div>
+        
+        <!-- ドロップゾーン -->
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-zone-content">
+            <span class="drop-icon">📷</span>
+            <p>画像をドラッグ＆ドロップ</p>
+            <p class="drop-hint">または クリックして選択</p>
+            <input type="file" id="fileInput" accept="image/*" hidden>
+          </div>
+          <img id="previewImage" class="preview-image" alt="プレビュー">
+        </div>
+
+        <!-- プロンプト入力 -->
+        <div class="prompt-section">
+          <label for="promptInput">🎯 分析指示</label>
+          <textarea 
+            id="promptInput" 
+            placeholder="例: この画像から赤色の物体を検出してバウンディングボックスを描画してください"
+            rows="4"
+          ></textarea>
+          
+          <!-- クイックプロンプト -->
+          <div class="quick-prompts">
+            <button class="quick-prompt" data-prompt="この画像の内容を詳細に分析してください">🔍 詳細分析</button>
+            <button class="quick-prompt" data-prompt="画像内のテキストをすべて抽出してください">📝 OCR</button>
+            <button class="quick-prompt" data-prompt="画像内の物体を検出してバウンディングボックスを描画してください">📦 物体検出</button>
+            <button class="quick-prompt" data-prompt="画像内のテーブルを解析してJSONで出力してください">📊 テーブル解析</button>
+          </div>
+        </div>
+
+        <!-- オプション -->
+        <div class="options-section">
+          <div class="option-group">
+            <label for="thinkingLevel">🧠 思考レベル</label>
+            <select id="thinkingLevel">
+              <option value="minimal">Minimal (最速)</option>
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium (推奨)</option>
+              <option value="high">High (最高精度)</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>
+              <input type="checkbox" id="streamingToggle" checked>
+              📡 ストリーミング
+            </label>
+          </div>
+        </div>
+
+        <!-- 実行ボタン -->
+        <button id="analyzeBtn" class="btn-primary" disabled>
+          <span class="btn-text">🚀 分析開始</span>
+          <span class="btn-loading">⏳ 処理中...</span>
+        </button>
+      </section>
+
+      <!-- 右パネル: 出力 -->
+      <section class="panel output-panel">
+        <div class="panel-header">
+          <h2>📥 分析結果</h2>
+          <button id="copyResultBtn" class="btn-secondary" disabled>📋 コピー</button>
+        </div>
+
+        <!-- タブ -->
+        <div class="tabs">
+          <button class="tab active" data-tab="result">結果</button>
+          <button class="tab" data-tab="image">処理画像</button>
+          <button class="tab" data-tab="code">実行コード</button>
+          <button class="tab" data-tab="raw">生データ</button>
+        </div>
+
+        <!-- タブコンテンツ -->
+        <div class="tab-content">
+          <div id="resultTab" class="tab-pane active">
+            <div class="result-content" id="resultContent">
+              <div class="placeholder">
+                <span>👆</span>
+                <p>画像をアップロードして分析を開始してください</p>
+              </div>
+            </div>
+          </div>
+          
+          <div id="imageTab" class="tab-pane">
+            <div class="processed-image-container">
+              <img id="processedImage" alt="処理済み画像">
+              <p class="no-image">処理画像がありません</p>
+            </div>
+          </div>
+          
+          <div id="codeTab" class="tab-pane">
+            <pre id="codeContent" class="code-block"><code>// 実行されたPythonコードがここに表示されます</code></pre>
+          </div>
+          
+          <div id="rawTab" class="tab-pane">
+            <pre id="rawContent" class="code-block"><code>{}</code></pre>
+          </div>
+        </div>
+
+        <!-- 進捗表示 -->
+        <div class="progress-section" id="progressSection" hidden>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-log" id="progressLog"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- フッター -->
+    <footer class="footer">
+      <p>Powered by Gemini 3 Flash Agentic Vision</p>
+    </footer>
+  </div>
+
+  <!-- 設定モーダル -->
+  <dialog id="settingsModal" class="modal">
+    <div class="modal-content">
+      <h2>⚙️ 設定</h2>
+      <div class="form-group">
+        <label for="apiKeyInput">API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="Gemini API Key">
+        <p class="hint">サーバー側の.envで設定済みの場合は不要です</p>
+      </div>
+      <div class="modal-actions">
+        <button id="closeSettings" class="btn-secondary">閉じる</button>
+        <button id="saveSettings" class="btn-primary">保存</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
